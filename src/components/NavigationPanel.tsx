@@ -75,15 +75,24 @@ const NavigationPanel: React.FC<NavigationPanelProps> = ({ isOpen, onClose }) =>
   const [subPanels, setSubPanels] = useState<SubPanelState[]>([]);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Close sub-panels when main panel closes
   useEffect(() => {
     if (!isOpen) {
       setSubPanels([]);
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
     }
   }, [isOpen]);
 
   const handleItemClick = (item: any, level: number = 0) => {
+    // Clear any pending close timeout
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+    }
+
     if (item.hasSubmenu) {
       // Open sub-panel
       const newSubPanel: SubPanelState = {
@@ -101,6 +110,20 @@ const NavigationPanel: React.FC<NavigationPanelProps> = ({ isOpen, onClose }) =>
       console.log('Navigate to:', item.id || item.title);
       onClose();
     }
+  };
+
+  const handleMouseEnterPanel = () => {
+    // Clear any pending close timeout when mouse enters any panel
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+    }
+  };
+
+  const handleMouseLeavePanel = (level: number) => {
+    // Set timeout to close sub-panels after delay
+    closeTimeoutRef.current = setTimeout(() => {
+      closeSubPanelsFromLevel(level);
+    }, 300); // 300ms delay
   };
 
   const closeSubPanelsFromLevel = (level: number) => {
@@ -206,7 +229,8 @@ const NavigationPanel: React.FC<NavigationPanelProps> = ({ isOpen, onClose }) =>
         className={`fixed top-0 left-0 h-full w-1/4 nav-panel z-50 transform transition-transform duration-300 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
-        onMouseLeave={() => closeSubPanelsFromLevel(0)}
+        onMouseEnter={handleMouseEnterPanel}
+        onMouseLeave={() => handleMouseLeavePanel(0)}
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="font-semibold text-lg">Меню</h2>
@@ -229,8 +253,8 @@ const NavigationPanel: React.FC<NavigationPanelProps> = ({ isOpen, onClose }) =>
             left: `${25 * (panel.level)}%`,
             transform: panel.isOpen ? 'translateX(0)' : 'translateX(-100%)'
           }}
-          onMouseEnter={() => {/* Keep panel open */}}
-          onMouseLeave={() => closeSubPanelsFromLevel(panel.level - 1)}
+          onMouseEnter={handleMouseEnterPanel}
+          onMouseLeave={() => handleMouseLeavePanel(panel.level - 1)}
         >
           <div className="flex items-center justify-between p-4 border-b border-border">
             <h2 className="font-semibold text-lg">
