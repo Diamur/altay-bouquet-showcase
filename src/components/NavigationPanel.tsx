@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface NavigationPanelProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface SubPanelState {
+  isOpen: boolean;
+  type: string;
+  level: number;
 }
 
 const navigationData = {
@@ -66,40 +72,60 @@ const navigationData = {
 };
 
 const NavigationPanel: React.FC<NavigationPanelProps> = ({ isOpen, onClose }) => {
-  const [activePanel, setActivePanel] = useState<string>('main');
+  const [subPanels, setSubPanels] = useState<SubPanelState[]>([]);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
-  const handleItemClick = (item: any) => {
+  // Close sub-panels when main panel closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSubPanels([]);
+    }
+  }, [isOpen]);
+
+  const handleItemClick = (item: any, level: number = 0) => {
     if (item.hasSubmenu) {
-      if (item.id === 'business') {
-        setActivePanel('business');
-      } else if (item.id === 'customers') {
-        setActivePanel('customers');
-      }
+      // Open sub-panel
+      const newSubPanel: SubPanelState = {
+        isOpen: true,
+        type: item.id,
+        level: level + 1
+      };
+      
+      // Replace or add sub-panel at this level
+      const newSubPanels = subPanels.slice(0, level);
+      newSubPanels.push(newSubPanel);
+      setSubPanels(newSubPanels);
     } else {
       // Navigate to page
-      console.log('Navigate to:', item.id);
+      console.log('Navigate to:', item.id || item.title);
       onClose();
     }
   };
 
-  const handleSubItemClick = (item: any) => {
-    if (item.hasSubmenu) {
-      if (item.id === 'functional-food') {
-        setActivePanel('functionalFood');
-      } else if (item.id === 'herbal-tea') {
-        setActivePanel('herbalTea');
-      } else if (item.id === 'balms') {
-        setActivePanel('balms');
-      }
-    } else {
-      console.log('Navigate to product:', item.title);
-      onClose();
-    }
+  const closeSubPanelsFromLevel = (level: number) => {
+    setSubPanels(prev => prev.slice(0, level));
   };
 
-  const renderPanel = () => {
-    switch (activePanel) {
+  const renderMainPanel = () => (
+    <div className="p-4">
+      {navigationData.main.map((item, index) => (
+        <div 
+          key={index}
+          className="nav-item flex items-center justify-between"
+          onClick={() => handleItemClick(item, 0)}
+          onMouseEnter={() => setHoveredItem(item.id)}
+          onMouseLeave={() => setHoveredItem(null)}
+        >
+          <span>{item.title}</span>
+          {item.hasSubmenu && <ChevronRight className="h-4 w-4" />}
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderSubPanel = (panelType: string, level: number) => {
+    switch (panelType) {
       case 'business':
         return (
           <div className="product-grid">
@@ -107,7 +133,7 @@ const NavigationPanel: React.FC<NavigationPanelProps> = ({ isOpen, onClose }) =>
               <div 
                 key={index}
                 className="product-card p-4 text-center cursor-pointer"
-                onClick={() => handleSubItemClick(item)}
+                onClick={() => handleItemClick(item, level)}
               >
                 <div className="w-16 h-16 bg-accent/10 rounded-lg mx-auto mb-2 flex items-center justify-center">
                   <div className="w-8 h-8 bg-accent/20 rounded"></div>
@@ -125,7 +151,7 @@ const NavigationPanel: React.FC<NavigationPanelProps> = ({ isOpen, onClose }) =>
               <div 
                 key={index}
                 className="nav-item flex items-center justify-between"
-                onClick={() => handleSubItemClick(item)}
+                onClick={() => handleItemClick(item, level)}
                 onMouseEnter={() => setHoveredItem(item.id)}
                 onMouseLeave={() => setHoveredItem(null)}
               >
@@ -136,17 +162,19 @@ const NavigationPanel: React.FC<NavigationPanelProps> = ({ isOpen, onClose }) =>
           </div>
         );
       
-      case 'functionalFood':
-      case 'herbalTea':
+      case 'functional-food':
+      case 'herbal-tea':
       case 'balms':
-        const items = navigationData[activePanel as keyof typeof navigationData] as { title: string }[];
+        const dataKey = panelType === 'functional-food' ? 'functionalFood' : 
+                       panelType === 'herbal-tea' ? 'herbalTea' : 'balms';
+        const items = navigationData[dataKey as keyof typeof navigationData] as { title: string }[];
         return (
           <div className="product-grid">
             {items.map((item, index) => (
               <div 
                 key={index}
                 className="product-card p-4 text-center cursor-pointer"
-                onClick={() => handleSubItemClick(item)}
+                onClick={() => handleItemClick(item, level)}
               >
                 <div className="w-16 h-16 bg-accent/10 rounded-lg mx-auto mb-2 flex items-center justify-center">
                   <div className="w-8 h-8 bg-accent/20 rounded"></div>
@@ -158,20 +186,7 @@ const NavigationPanel: React.FC<NavigationPanelProps> = ({ isOpen, onClose }) =>
         );
       
       default:
-        return (
-          <div className="p-4">
-            {navigationData.main.map((item, index) => (
-              <div 
-                key={index}
-                className="nav-item flex items-center justify-between"
-                onClick={() => handleItemClick(item)}
-              >
-                <span>{item.title}</span>
-                {item.hasSubmenu && <ChevronRight className="h-4 w-4" />}
-              </div>
-            ))}
-          </div>
-        );
+        return <div></div>;
     }
   };
 
@@ -185,11 +200,13 @@ const NavigationPanel: React.FC<NavigationPanelProps> = ({ isOpen, onClose }) =>
         />
       )}
       
-      {/* Navigation Panel */}
+      {/* Main Navigation Panel */}
       <div 
+        ref={panelRef}
         className={`fixed top-0 left-0 h-full w-1/4 nav-panel z-50 transform transition-transform duration-300 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
+        onMouseLeave={() => closeSubPanelsFromLevel(0)}
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="font-semibold text-lg">Меню</h2>
@@ -199,21 +216,44 @@ const NavigationPanel: React.FC<NavigationPanelProps> = ({ isOpen, onClose }) =>
         </div>
         
         <div className="flex-1 overflow-y-auto">
-          {renderPanel()}
+          {renderMainPanel()}
         </div>
-        
-        {activePanel !== 'main' && (
-          <div className="p-4 border-t border-border">
+      </div>
+
+      {/* Sub Panels */}
+      {subPanels.map((panel, index) => (
+        <div
+          key={`${panel.type}-${index}`}
+          className={`fixed top-0 h-full w-1/4 nav-panel z-50 transform transition-transform duration-300`}
+          style={{ 
+            left: `${25 * (panel.level)}%`,
+            transform: panel.isOpen ? 'translateX(0)' : 'translateX(-100%)'
+          }}
+          onMouseEnter={() => {/* Keep panel open */}}
+          onMouseLeave={() => closeSubPanelsFromLevel(panel.level - 1)}
+        >
+          <div className="flex items-center justify-between p-4 border-b border-border">
+            <h2 className="font-semibold text-lg">
+              {panel.type === 'business' ? 'Бизнесу' :
+               panel.type === 'customers' ? 'Покупателям' :
+               panel.type === 'functional-food' ? 'Функциональное питание' :
+               panel.type === 'herbal-tea' ? 'Травяной чай' :
+               panel.type === 'balms' ? 'Бальзамы' : 'Подменю'}
+            </h2>
             <Button 
               variant="ghost" 
-              onClick={() => setActivePanel('main')}
-              className="w-full justify-start"
+              size="icon" 
+              onClick={() => closeSubPanelsFromLevel(panel.level - 1)}
             >
-              ← Назад
+              <X className="h-5 w-5" />
             </Button>
           </div>
-        )}
-      </div>
+          
+          <div className="flex-1 overflow-y-auto">
+            {renderSubPanel(panel.type, panel.level)}
+          </div>
+        </div>
+      ))}
     </>
   );
 };
