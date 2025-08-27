@@ -2,14 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* ALTAYBUKET.RU - Luxury Design System */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Premium Color Palette */
+    --background: 0 0% 99%;
+    --foreground: 0 0% 8%;
+    
+    /* Luxury Brand Colors */
+    --luxury-gold: 45 85% 55%;
+    --luxury-dark: 0 0% 8%;
+    --luxury-light: 0 0% 96%;
+    --luxury-accent: 45 25% 25%;
+    --luxury-cream: 45 40% 94%;
+    --luxury-shadow: 0 0% 0%;
+    
+    /* Premium Gradients */
+    --gradient-luxury: linear-gradient(135deg, hsl(var(--luxury-gold)), hsl(45 65% 45%));
+    --gradient-elegant: linear-gradient(180deg, hsl(var(--luxury-light)), hsl(var(--background)));
+    --gradient-overlay: linear-gradient(180deg, transparent, hsl(var(--luxury-dark) / 0.1));
+    
+    /* Enhanced Shadows */
+    --shadow-luxury: 0 4px 20px hsl(var(--luxury-shadow) / 0.1);
+    --shadow-elegant: 0 2px 10px hsl(var(--luxury-shadow) / 0.05);
+    --shadow-deep: 0 8px 30px hsl(var(--luxury-shadow) / 0.15);
+    
+    /* Smooth Transitions */
+    --transition-luxury: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --transition-elegant: all 0.3s ease-out;
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -17,24 +38,24 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 0 0% 8%;
+    --primary-foreground: 45 85% 55%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 45 40% 94%;
+    --secondary-foreground: 0 0% 8%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 45 85% 55%;
+    --accent-foreground: 0 0% 8%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 0 0% 90%;
+    --input: 0 0% 95%;
+    --ring: 45 85% 55%;
 
     --radius: 0.5rem;
 
@@ -101,5 +122,61 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+}
+
+/* Luxury Component Styles */
+@layer components {
+  /* Header Styles */
+  .header-luxury {
+    @apply bg-background/95 backdrop-blur-md transition-all duration-300;
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .header-scrolled {
+    @apply bg-background/80;
+    box-shadow: var(--shadow-luxury);
+  }
+
+  /* Navigation Styles */
+  .nav-panel {
+    @apply bg-background border-r border-border transition-transform duration-300 ease-out;
+    box-shadow: var(--shadow-luxury);
+  }
+
+  .nav-item {
+    @apply px-6 py-4 text-foreground hover:bg-secondary transition-colors duration-200 cursor-pointer;
+  }
+
+  .nav-item-active {
+    @apply bg-accent/10 border-r-2 border-accent text-accent-foreground;
+  }
+
+  /* Product Grid Styles */
+  .product-grid {
+    @apply grid grid-cols-2 gap-4 p-4 max-h-96 overflow-y-auto;
+  }
+
+  .product-card {
+    @apply bg-card rounded-lg overflow-hidden transition-transform duration-200 hover:scale-105;
+    box-shadow: var(--shadow-elegant);
+  }
+
+  /* Luxury Buttons */
+  .btn-luxury {
+    @apply bg-accent text-accent-foreground px-6 py-3 rounded-md transition-all duration-200;
+    background: var(--gradient-luxury);
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .btn-luxury:hover {
+    @apply transform scale-105;
+    box-shadow: var(--shadow-luxury);
+  }
+
+  /* Footer Styles */
+  .footer-luxury {
+    @apply bg-secondary border-t border-border;
   }
 }
